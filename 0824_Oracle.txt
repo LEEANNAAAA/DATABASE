@@ -1,0 +1,153 @@
+SQUENCE: 번호를 생성하는 것
+NOCYCLE(MAXVALUE를 넘어서면 에러), CYCLE
+
+TOP-N QUERY: ROWNUM
+
+
+--1
+select * from user_tables;
+select table_name from user_tables;
+
+--2 dict 와 dictionary 는 동일 (시스템에서 관리하는 정보)
+select * from dict;
+select * from dictionary;
+
+--3 내 계정으로 확인 가능한 테이블들
+select * from all_tables;
+
+--4 SYS접속, dba가 관리하는 테이블들 (관리자 SYS로 접속해서 볼 수 있음_이곳에서는 확인불가SCOTT이므로)
+select * from DBA_TABLES;
+
+--5 내 계정의 인덱스들 확인
+SELECT * FROM USER_INDEXES;
+
+--6 SYS접속, 사용자 명이 SCOTT에 대한 정보 확인
+SELECT * FROM DBA_USERS
+WHERE USERNAME='SCOTT';
+
+--7 SCOTT계정 INDEX만들어진 열 확인
+SELECT * FROM USER_IND_COLUMNS;
+
+--8 EMP테이블을 복사해서 EMP1생성
+CREATE TABLE EMP1
+AS SELECT * FROM EMP;
+
+SELECT * FROM EMP1;
+
+--9 SCOTT계정, EMP테이블의 SAL 속성을 기준으로 인덱스 생성 인덱스명:IDX_EMP1_SAL
+CREATE INDEX IDX_EMP1_SAL
+ON EMP1(SAL);
+
+--10 
+SELECT * FROM EMP1;
+SELECT SAL FROM EMP1;
+
+--11 만들어진 인덱스 확인
+SELECT * FROM USER_IND_COLUMNS;
+SELECT * FROM USER_INDEXES;
+
+--12 인덱스 삭제
+DROP INDEX IDX_EMP1_SAL;
+
+--13 SYS접속 SCOTT에게 VIEW생성권한 부여
+GRANT CREATE VIEW TO SCOTT;
+
+--14  SCOTT계정 EMP테이블에서 사원번호, 이름, 직업, 부서번호가 20인 사람
+--이용해서 VW_EMP20으로 뷰 생성
+CREATE VIEW VW_EMP20
+AS (SELECT  EMPNO, ENAME, JOB, DEPTNO 
+    FROM EMP 
+    WHERE DEPTNO=20);
+
+--15 뷰 생성 확인
+select * from vw_emp20;
+select * from user_views;
+
+--16 뷰 텍스트 확인
+select view_name, text_length, text
+from user_views;
+
+--17 뷰 삭제
+
+DROP VIEW VW_EMP20;
+
+--18 
+select * from vw_EMP20;
+
+--19 ROWNUM
+SELECT ROWNUM, E.*
+FROM EMP E;
+
+--20 봉급 역순으로 정렬해서 출력하는데 줄번호와 함께 출력
+SELECT ROWNUM, E.*
+FROM EMP E
+ORDER BY SAL DESC;
+
+--21 해결책 정렬 후 줄번호 부여
+SELECT ROWNUM, E.*
+FROM (SELECT * FROM EMP ORDER BY SAL DESC) E;
+
+--22 부서번호 순, 같은 부서이면 이름순 정렬해서 번호 부여
+SELECT ROWNUM, E.*
+FROM (SELECT * FROM EMP ORDER BY DEPTNO, ENAME) E;
+
+--23 입사일 순 정렬, 번호 부여
+SELECT ROWNUM, E.*
+FROM (SELECT * FROM EMP ORDER BY HIREDATE) E;
+
+--24 WITH 사용(23번과 동일)
+WITH E AS (SELECT * FROM EMP ORDER BY HIREDATE)
+SELECT ROWNUM, E.*
+FROM E;
+
+--25 23번 응용예제, 최고 3위까지 출력
+SELECT ROWNUM, E.*
+FROM (SELECT * FROM EMP ORDER BY HIREDATE) E
+WHERE ROWNUM <=3;
+
+--26 DEPT테이블을 복사해서 DEPT2 생성
+CREATE TABLE DEPT2
+AS SELECT * FROM DEPT
+WHERE 1<>1;
+
+SELECT * FROM DEPT2;
+
+--27 SEQUENCE SEQ_DEPT2생성, 증가10, 초기값:10, 최대치:90, 최소치:0, 반복X, 캐쉬:2
+--(캐쉬는 써도되고 안써도됨)
+ CREATE SEQUENCE SEQ_DEPT2
+ INCREMENT BY 10
+ START WITH 10
+ MAXVALUE 90
+ MINVALUE 0
+ NOCYCLE
+ CACHE 2;
+ 
+ --28 USER_SEQUENCES 테이블 내용 확인
+ SELECT * FROM USER_SEQUENCES;
+ 
+ --29 DEPT2 테이블에 SEQ_DEPT2.NEXTVAL, 'DATABASE', 'SEOUL'를 삽입
+ SELECT * FROM DEPT2;
+ 
+ INSERT INTO DEPT2
+ VALUES(SEQ_DEPT2.NEXTVAL, 'DATABASE', 'SEOUL');
+ --9번 반복 실행
+ 
+ --30 현재 시퀀스 번호 SEQ_DEPT2.CURRVAL 확인 CURRENTVALUE
+ SELECT SEQ_DEPT2.CURRVAL
+ FROM DUAL;
+ 
+ --31 시퀀스 CYCLE로 변경
+ ALTER SEQUENCE SEQ_DEPT2
+ INCREMENT BY 3
+ MAXVALUE 99
+ CYCLE;
+ 
+ --32 INSERT 문장을 3번 추가 후 SELECT * FROM DEPT2; 확인
+ --INSERT 문장을 2번 추가 후 SELECT * FROM DEPT2; 확인
+ SELECT * FROM DEPT2;
+
+ INSERT INTO DEPT2
+ VALUES(SEQ_DEPT2.NEXTVAL, 'DATABASE', 'SEOUL');
+ 
+ --33 시퀀스 삭제
+ DROP SEQUENCE SEQ_DEPT2;
